@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ConfigObject {
+public @interface ConfigSerialize {
 
     String location() default "UNDEFINED";
 }

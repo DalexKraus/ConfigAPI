@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class ConfigAPI {
@@ -52,13 +53,22 @@ public class ConfigAPI {
     public void saveConfig() {
         ArrayList<ConfigInstruction> allInstructions = new ArrayList<>();
         for (Object container : this.instructionContainers) {
-            ArrayList<ConfigInstruction> containerInstructions = getAllConfigInstructionsForConfig(container, this.identifier);
+            ArrayList<ConfigInstruction> containerInstructions = getAllConfigInstructions(container, this.identifier);
             if (containerInstructions != null)
                 allInstructions.addAll(containerInstructions);
         }
         //Apply changes
         for (ConfigInstruction instruction : allInstructions) {
-            configuration.set(instruction.getConfigurationSection(), instruction.getValue().toString());
+            Object instructionValue = instruction.getValue();
+            Object value;
+            //Convert any type of lists into a list containing the String values of the entries
+            if (instructionValue instanceof List) {
+                ArrayList<String> stringList = new ArrayList<>();
+                for (Object obj : (List) instructionValue) stringList.add(obj.toString());
+                value = stringList;
+            }
+            else value = instructionValue;
+            configuration.set(instruction.getConfigurationSection(), value);
         }
         //Save config
         try {
@@ -69,7 +79,7 @@ public class ConfigAPI {
         }
     }
 
-    private ArrayList<ConfigInstruction> getAllConfigInstructionsForConfig(Object container, String configId) {
+    private ArrayList<ConfigInstruction> getAllConfigInstructions(Object container, String configId) {
         //We'll handle serializing objects differently
         if (container.getClass().isAnnotationPresent(ConfigSerialize.class))
             return null;
